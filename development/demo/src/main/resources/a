@@ -1,0 +1,70 @@
+val df = spark.read.textFile("hdfs://myhdfs/input.csv")
+df.map(line => {
+    val arrs = line.split(",")
+    new Tuple2((new User(arrs[0],arrs[1],arrs[2]),)
+    }).
+
+--创建表
+create external table if not exists User(
+    userId String,
+    locationId String,
+    startTime date,
+    interval int
+)
+row format delimited fields terminated by ',';
+--load 数据
+load data inpath  'hdfs://myhdfs/input.csv' into table User;
+--ETL数据
+select
+    userId,
+    locationId,
+    startTime,
+    dateformat((unix_timestamp(startTime) + unix_timestamp(concat("1970-01-01," ",interval,":00:00"))),"yyyy-MM-dd HH:MM:ss") endTime,
+    interval
+from
+    User;t1
+
+select
+    userId,
+    locationId,
+    startTime,
+    sum(if(startTime=lag(endTime,1,null),interval,0)) total
+from
+    (select
+         userId,
+         locationId,
+         startTime,
+         dateformat((unix_timestamp(startTime) + unix_timestamp(concat("1970-01-01," ",interval,":00:00"))),"yyyy-MM-dd HH:MM:ss") endTime,
+         interval
+     from
+         User)t1
+group by
+    userId,
+    locationId
+
+
+
+     /**
+         * 求四分位数
+         *
+         * @param arr
+         * @return 存放三个四分位数的数组
+         */
+        public static double[] getQuartiles(double[] arr) {
+            double[] tempArr = Arrays.copyOf(arr, arr.length);
+            Arrays.sort(tempArr);
+            double[] quartiles = new double[3];
+            // 第二四分位数（中位数）
+            quartiles[1] = getMedian(tempArr);
+            // 求另外两个四分位数
+            if (tempArr.length % 2 == 0) {
+                quartiles[0] = getMedian(Arrays.copyOfRange(tempArr, 0, tempArr.length / 2));
+                quartiles[2] = getMedian(Arrays.copyOfRange(tempArr, tempArr.length / 2, tempArr.length));
+            } else {
+                quartiles[0] = getMedian(Arrays.copyOfRange(tempArr, 0, tempArr.length / 2));
+                quartiles[2] = getMedian(Arrays.copyOfRange(tempArr, tempArr.length / 2 + 1, tempArr.length));
+            }
+            return quartiles;
+        }
+
+
